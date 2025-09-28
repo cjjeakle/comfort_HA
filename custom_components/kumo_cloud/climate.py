@@ -385,6 +385,8 @@ class KumoCloudClimate(CoordinatorEntity, ClimateEntity):
         if target_temp is None:
             return
 
+        target_temp = round(target_temp * 2) / 2 # Round to nearest .5 C
+
         hvac_mode = self.hvac_mode
         commands = {}
 
