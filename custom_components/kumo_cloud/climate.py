@@ -340,7 +340,7 @@ class KumoCloudClimate(CoordinatorEntity, ClimateEntity):
     @property
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
-        return 0.5  # Kumo Cloud typically supports 0.5 degree steps
+        return 1  # In deg F mode, use 1 deg steps
 
     @property
     def available(self) -> bool:
