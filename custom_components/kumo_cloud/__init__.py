@@ -63,6 +63,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Register a manual refresh API
+    async def async_handle_refresh(call):
+        await coordinator.async_request_refresh()
+    hass.services.async_register(
+        DOMAIN,
+        "refresh",
+        async_handle_refresh,
+    )
+    entry.async_on_unload(
+        lambda: hass.services.async_remove(DOMAIN, "refresh")
+    )
+
     return True
 
 
@@ -255,12 +267,6 @@ class KumoCloudDevice:
             # Send the command
             await self.coordinator.api.send_command(self.device_serial, commands)
             _LOGGER.debug("Sent command to device %s: %s", self.device_serial, commands)
-
-            # Wait a moment for the command to be processed
-            await asyncio.sleep(1)
-
-            # Refresh this specific device's data immediately
-            await self.coordinator.async_refresh_device(self.device_serial)
 
         except Exception as err:
             _LOGGER.error(

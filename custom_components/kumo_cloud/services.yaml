@@ -1,0 +1,3 @@
+refresh:
+  name: Refresh Kumo Cloud data
+  description: Manually refresh Kumo Cloud data for all devices.
