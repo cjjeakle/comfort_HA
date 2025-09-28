@@ -116,6 +116,9 @@ class KumoCloudDataUpdateCoordinator(DataUpdateCoordinator):
                     devices[device_serial] = device_detail
                     device_profiles[device_serial] = device_profile
 
+                    # Log each update.
+                    _LOGGER.debug("Device %s = mode=%s, spCool=%s, spHeat=%s", device_serial, zone["adapter"]["operationMode"], zone["adapter"]["spCool"], zone["adapter"]["spHeat"])
+
             # Store the data for access by entities
             self.zones = zones
             self.devices = devices
