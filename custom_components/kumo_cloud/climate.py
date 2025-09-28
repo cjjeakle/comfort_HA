@@ -371,15 +371,16 @@ class KumoCloudClimate(CoordinatorEntity, ClimateEntity):
                 sp_cool = device_data.get("spCool", adapter.get("spCool"))
                 sp_heat = device_data.get("spHeat", adapter.get("spHeat"))
 
-                if sp_cool is not None:
+                if kumo_mode == HVACMode.COOL and sp_cool is not None:
                     commands["spCool"] = sp_cool
-                if sp_heat is not None:
+                elif kumo_mode == HVACMode.HEAT and sp_heat is not None:
                     commands["spHeat"] = sp_heat
 
                 await self._send_command_and_refresh(commands)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        new_mode = kwargs.get(ATTR_HVAC_MODE)
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         if target_temp is None:
             return
@@ -387,21 +388,19 @@ class KumoCloudClimate(CoordinatorEntity, ClimateEntity):
         hvac_mode = self.hvac_mode
         commands = {}
 
+        # If mode changed, send it.
+        kumo_mode = HVAC_TO_KUMO_MODE.get(new_mode)
+        if kumo_mode is not None and kumo_mode != hvac_mode:
+            commands = {"operationMode": kumo_mode}
+            hvac_mode = kumo_mode
+
         adapter = self.device.zone_data.get("adapter", {})
         device_data = self.device.device_data
 
         if hvac_mode == HVACMode.COOL:
             commands["spCool"] = target_temp
-            # Maintain heat setpoint
-            sp_heat = device_data.get("spHeat", adapter.get("spHeat"))
-            if sp_heat is not None:
-                commands["spHeat"] = sp_heat
         elif hvac_mode == HVACMode.HEAT:
             commands["spHeat"] = target_temp
-            # Maintain cool setpoint
-            sp_cool = device_data.get("spCool", adapter.get("spCool"))
-            if sp_cool is not None:
-                commands["spCool"] = sp_cool
         elif hvac_mode == HVACMode.HEAT_COOL:
             # For auto mode, set both setpoints based on current temperature
             commands["spCool"] = target_temp
@@ -439,9 +438,9 @@ class KumoCloudClimate(CoordinatorEntity, ClimateEntity):
         sp_cool = device_data.get("spCool", adapter.get("spCool"))
         sp_heat = device_data.get("spHeat", adapter.get("spHeat"))
 
-        if sp_cool is not None:
+        if operation_mode == HVACMode.COOL and sp_cool is not None:
             commands["spCool"] = sp_cool
-        if sp_heat is not None:
+        elif operation_mode == HVACMode.HEAT and sp_heat is not None:
             commands["spHeat"] = sp_heat
 
         await self._send_command_and_refresh(commands)
