@@ -19,6 +19,7 @@ from .const import (
     API_BASE_URL,
     API_VERSION,
     API_APP_VERSION,
+    REQUEST_TIMEOUT,
     TOKEN_REFRESH_INTERVAL,
     TOKEN_EXPIRY_MARGIN,
 )
@@ -65,7 +66,7 @@ class KumoCloudAPI:
         }
 
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
                 async with self.session.post(
                     url, headers=headers, json=data
                 ) as response:
@@ -105,7 +106,7 @@ class KumoCloudAPI:
         data = {"refresh": self.refresh_token}
 
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
                 async with self.session.post(
                     url, headers=headers, json=data
                 ) as response:
@@ -155,7 +156,7 @@ class KumoCloudAPI:
         }
 
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
                 if method.upper() == "GET":
                     async with self.session.get(url, headers=headers) as response:
                         response.raise_for_status()

@@ -40,3 +40,6 @@ AIR_DIRECTION_SWING = "swing"
 
 # Default scan interval in seconds
 DEFAULT_SCAN_INTERVAL = 60
+
+# Kumo/Comfort HTTP API timeout in seconds
+REQUEST_TIMEOUT = 60
