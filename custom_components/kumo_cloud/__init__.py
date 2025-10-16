@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from datetime import timedelta
 from typing import Any
@@ -109,6 +110,9 @@ class KumoCloudDataUpdateCoordinator(DataUpdateCoordinator):
             # Get zones for the site
             zones = await self.api.get_zones(self.site_id)
 
+            # DLog full zone API response
+            _LOGGER.debug("_async_update_data - raw zone detail for %s:\n%s", self.site_id, json.dumps(zones, indent=2))
+
             # Get device details for each zone
             devices = {}
             device_profiles = {}
@@ -125,11 +129,14 @@ class KumoCloudDataUpdateCoordinator(DataUpdateCoordinator):
                         device_detail_task, device_profile_task
                     )
 
+                    # DLog full device & profile API responses
+                    _LOGGER.debug("_async_update_data - raw device detail & profile for %s:\n%s, \n%s", device_serial, json.dumps(device_detail, indent=2), json.dumps(device_profile, indent=2))
+
                     devices[device_serial] = device_detail
                     device_profiles[device_serial] = device_profile
 
-                    # Log each update.
-                    _LOGGER.debug("Device %s = mode=%s, spCool=%s, spHeat=%s", device_serial, zone["adapter"]["operationMode"], zone["adapter"]["spCool"], zone["adapter"]["spHeat"])
+                    # DLog a summary of this device's state according to its zone "adapter"
+                    _LOGGER.debug("Device %s = connected=%s, mode=%s, spCool=%s, spHeat=%s", device_serial, zone["adapter"]["connected"], zone["adapter"]["operationMode"], zone["adapter"]["spCool"], zone["adapter"]["spHeat"])
 
             # Store the data for access by entities
             self.zones = zones
@@ -163,6 +170,9 @@ class KumoCloudDataUpdateCoordinator(DataUpdateCoordinator):
             # Get fresh device details
             device_detail = await self.api.get_device_details(device_serial)
 
+            # DLog full device API response
+            _LOGGER.debug("async_refresh_device - raw device detail for %s:\n%s", device_serial, json.dumps(device_detail, indent=2))
+
             # Update the cached device data
             self.devices[device_serial] = device_detail
 
@@ -195,7 +205,8 @@ class KumoCloudDataUpdateCoordinator(DataUpdateCoordinator):
             # Notify all listeners that data has been updated
             self.async_update_listeners()
 
-            _LOGGER.debug("Refreshed device %s data", device_serial)
+            # DLog post refresh device state
+            _LOGGER.debug("Refreshed device %s = connected=%s, mode=%s, spCool=%s, spHeat=%s", device_serial, zone["adapter"]["connected"], zone["adapter"]["operationMode"], zone["adapter"]["spCool"], zone["adapter"]["spHeat"])
 
         except Exception as err:
             _LOGGER.warning("Failed to refresh device %s: %s", device_serial, err)
